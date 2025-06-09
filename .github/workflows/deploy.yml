@@ -26,16 +26,25 @@ jobs:
       - name: Build web
         run: flutter build web --release --base-href "/habit_tracker/"
       
+      - name: Create .nojekyll file
+        run: touch build/web/.nojekyll
+      
+      - name: Check for index.html
+        run: |
+          if [ -f "build/web/index.html" ]; then
+            echo "index.html exists in build/web/"
+          else
+            echo "ERROR: index.html is missing in build/web/"
+            exit 1
+          fi
+      
       - name: Inspect build directory 
         run: |
-          echo "== Root directory =="
-          ls -la
-          echo "== Build directory =="
-          ls -la build/
-          echo "== Web directory (if exists) =="
-          ls -la build/web/ || echo "Web directory not found"
           echo "== Web directory files =="
-          ls -la build/web/* || echo "No files in web directory"
+          ls -la build/web/
+          
+          echo "== Index.html content =="
+          cat build/web/index.html
       
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
@@ -43,4 +52,4 @@ jobs:
           folder: build/web
           branch: gh-pages
           token: ${{ secrets.GITHUB_TOKEN }}
-          clean: true # Limpa a branch gh-pages antes do deploy
+          clean: true
