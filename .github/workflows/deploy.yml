@@ -1,0 +1,49 @@
+name: Deploy Flutter App
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.x'
+          channel: 'stable'
+      
+      - name: Install dependencies
+        run: flutter pub get
+      
+      - name: Enable web
+        run: flutter config --enable-web
+      
+      - name: Build web
+        run: flutter build web --release
+      
+      - name: Inspect build directory 
+        run: |
+          echo "== Root directory =="
+          ls -la
+          echo "== Build directory =="
+          ls -la build/
+          echo "== Web directory (if exists) =="
+          ls -la build/web/ || echo "Web directory not found"
+          echo "== Flutter assets =="
+          ls -la build/flutter_assets/ || echo "Flutter assets directory not found"
+      
+      - name: Run tests
+        run: flutter test
+        if: success()
+      
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: build/web
+          branch: gh-pages
+          token: ${{ secrets.GITHUB_TOKEN }}
