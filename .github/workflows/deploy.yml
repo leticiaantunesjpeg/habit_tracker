@@ -24,7 +24,7 @@ jobs:
         run: flutter config --enable-web
       
       - name: Build web
-        run: flutter build web --release
+        run: flutter build web --release --base-href "/habit_tracker/"
       
       - name: Inspect build directory 
         run: |
@@ -34,8 +34,8 @@ jobs:
           ls -la build/
           echo "== Web directory (if exists) =="
           ls -la build/web/ || echo "Web directory not found"
-          echo "== Flutter assets =="
-          ls -la build/flutter_assets/ || echo "Flutter assets directory not found"
+          echo "== Web directory files =="
+          ls -la build/web/* || echo "No files in web directory"
       
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
@@ -43,3 +43,4 @@ jobs:
           folder: build/web
           branch: gh-pages
           token: ${{ secrets.GITHUB_TOKEN }}
+          clean: true # Limpa a branch gh-pages antes do deploy
