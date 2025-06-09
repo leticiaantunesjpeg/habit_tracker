@@ -1,0 +1,5 @@
+# Ignore everything in this directory, make sure index.html is included in git
+!index.html
+!favicon.svg
+!manifest.json
+!.gitignore
