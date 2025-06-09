@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="24" cy="24" r="24" fill="#3498DB" opacity="0.2" />
+  
+  <!-- Inner circle -->
+  <circle cx="24" cy="24" r="20" fill="#3498DB" />
+  
+  <!-- Track Changes icon representation -->
+  <circle cx="24" cy="24" r="15" stroke="white" stroke-width="2" fill="none" />
+  <circle cx="24" cy="24" r="11" stroke="white" stroke-width="2" fill="none" />
+  <circle cx="24" cy="24" r="7" stroke="white" stroke-width="2" fill="none" />
+  <circle cx="24" cy="24" r="3" fill="white" />
+  
+  <!-- Border ring effect -->
+  <circle cx="24" cy="24" r="18" stroke="white" stroke-opacity="0.7" stroke-width="1" fill="none" />
+</svg>
