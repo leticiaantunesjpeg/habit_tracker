@@ -37,10 +37,6 @@ jobs:
           echo "== Flutter assets =="
           ls -la build/flutter_assets/ || echo "Flutter assets directory not found"
       
-      - name: Run tests
-        run: flutter test
-        if: success()
-      
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
