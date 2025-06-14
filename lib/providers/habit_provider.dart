@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../models/habit.dart';
 import '../services/firebase_service.dart';
+import '../services/habit_suggestion_service.dart';
 
 class HabitProvider extends ChangeNotifier {
   final FirebaseService _firebaseService = FirebaseService();
@@ -44,21 +45,26 @@ class HabitProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> addHabit(String name, String frequency, int total, {String? startTime, String? endTime}) async {
+  Future<void> addHabit(String name, String frequency, int total, {String? startTime, String? endTime, required String category}) async {
     try {
       _isLoading = true;
       notifyListeners();
-      print('Adicionando novo hábito: $name, frequência: $frequency, total: $total, início: $startTime, fim: $endTime');
+      print('Adicionando novo hábito: $name, frequência: $frequency, total: $total, início: $startTime, fim: $endTime, categoria: $category');
+      
       String normalizedFrequency = frequency == 'Diário' ? 'Diária' : frequency;
+      
       final habitData = {
         'name': name,
+        'name_lower': name.toLowerCase(),
         'frequency': normalizedFrequency,
         'isCompleted': false,
         'progress': 0,
         'total': total,
         'startTime': startTime,
         'endTime': endTime,
+        'category': category
       };
+      
       await _firebaseService.createHabit(habitData);
       await _loadHabits();
     } catch (e, stackTrace) {
@@ -124,10 +130,10 @@ class HabitProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> updateHabit(Habit habit, String newName, String newFrequency, int newTotal, String? startTime, String? endTime) async {
+  Future<void> updateHabit(Habit habit, String newName, String newFrequency, int newTotal, String? startTime, String? endTime, {required String category}) async {
     try {
       print('Tentando atualizar hábito: ${habit.id}');
-      print('Novos dados: nome=$newName, frequência=$newFrequency, total=$newTotal, início=$startTime, fim=$endTime');
+      print('Novos dados: nome=$newName, frequência=$newFrequency, total=$newTotal, início=$startTime, fim=$endTime, categoria=$category');
 
       if (habit.id == null) {
         throw Exception('Tentativa de atualizar hábito sem ID');
@@ -138,6 +144,7 @@ class HabitProvider extends ChangeNotifier {
         'frequency': newFrequency,
         'total': newTotal,
         'startTime': startTime,
+        'category': category,
         'endTime': endTime,
       };
 

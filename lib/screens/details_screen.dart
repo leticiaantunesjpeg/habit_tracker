@@ -396,7 +396,7 @@ class _DetailsScreenState extends State<DetailsScreen> with SingleTickerProvider
                       ),
                     ),
                   ),
-                  const SizedBox(height: 80), // Espaço para o FAB
+                  const SizedBox(height: 80),
                 ],
               ),
             ),

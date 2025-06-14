@@ -7,7 +7,8 @@ class Habit {
   int total;
   String? notes;
   String? startTime;
-  String? endTime; 
+  String? endTime;
+  final String category;
 
   Habit({
     this.id,
@@ -19,6 +20,7 @@ class Habit {
     this.notes,
     this.startTime,
     this.endTime,
+    required this.category,
   });
 
   Map<String, dynamic> toMap() {
@@ -29,6 +31,7 @@ class Habit {
       'progress': progress,
       'total': total,
       'notes': notes,
+      'category': category,
       'startTime': startTime,
       'endTime': endTime,
     };
@@ -45,6 +48,7 @@ class Habit {
       notes: map['notes'],
       startTime: map['startTime'],
       endTime: map['endTime'],
+      category: map['category'] ?? 'Não categorizado',
     );
   }
 }

@@ -1,12 +1,18 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_ml_model_downloader/firebase_ml_model_downloader.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/habit_provider.dart';
 import '../providers/theme_provider.dart';
 import '../models/habit.dart';
+import '../models/habit_suggestion.dart';
+import '../services/habit_suggestion_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/animated_progress_button.dart';
 import '../widgets/app_logo.dart';
+import '../widgets/habit_insights.dart';
 import './details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -411,10 +417,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       builder: (context, child) {
         return FadeTransition(
           opacity: _fadeAnimation,
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 16),
-            itemCount: habits.length,
-            itemBuilder: (context, index) {
+          child: Column(
+            children: [
+              HabitInsights(habits: habits),
+              
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 16),
+                  itemCount: habits.length,
+                  itemBuilder: (context, index) {
               final habit = habits[index];
               final isNumericFrequency = int.tryParse(habit.frequency) != null;
               int freqTotal = isNumericFrequency ? int.parse(habit.frequency) : 1;
@@ -618,6 +629,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               );
             },
           ),
+              ),
+            ],
+          ),
         );
       },
     );
@@ -626,10 +640,40 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   void _showAddHabitDialog(BuildContext context, HabitProvider habitProvider) {
     final TextEditingController nameController = TextEditingController();
     final TextEditingController totalController = TextEditingController();
-    final List<String> frequencies = ['Diária', 'Semanal', 'Mensal'];
-    String selectedFrequency = 'Diária';
     String? selectedStartTime;
     String? selectedEndTime;
+    final List<String> frequencies = ['Diária', 'Semanal', 'Mensal'];
+    String selectedFrequency = frequencies[0];
+    
+
+    final List<String> categories = [
+      'Saúde',
+      'Fitness',
+      'Produtividade',
+      'Estudo',
+      'Trabalho',
+      'Lazer',
+      'Mindfulness',
+      'Nutrição',
+      'Social',
+      'Finanças',
+      'Habilidades',
+      'Leitura',
+      'Exercício',
+      'bem-estar',
+      'aprendizado',
+      'culinária',
+      'organização',
+    ];
+    String selectedCategory = categories[0];
+
+    Future<List<HabitSuggestion>> _getHabitSuggestions(String query) async {
+      return await HabitSuggestionService().getSuggestions(
+        query, 
+        frequency: selectedFrequency,
+        limit: 10,
+      );
+    }
 
     Future<void> _selectTime(BuildContext context, bool isStartTime) async {
       final TimeOfDay? picked = await showTimePicker(
@@ -639,7 +683,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         confirmText: 'OK',
         helpText: 'Selecione o horário',
         builder: (context, child) {
-          // Aplicando tema e localização em português
+
           return Theme(
             data: Theme.of(context).copyWith(
               timePickerTheme: TimePickerThemeData(
@@ -686,72 +730,67 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       }
     }
 
-    showDialog(
+    showDialog<void>(
       context: context,
       barrierColor: Colors.black.withOpacity(0.6),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return Dialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              elevation: 10,
-              backgroundColor: Colors.transparent,
-              child: Container(
-                constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width * 0.85,
-                  maxHeight: MediaQuery.of(context).size.height * 0.8,
+      builder: (BuildContext dialogContext) => StatefulBuilder(
+        builder: (BuildContext context, StateSetter setDialogState) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          elevation: 10,
+          backgroundColor: Colors.transparent,
+          child: Container(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.85,
+              maxHeight: MediaQuery.of(context).size.height * 0.8,
+            ),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppTheme.cardColor, Color(0xFF34495E)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppTheme.cardColor, Color(0xFF34495E)],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxHeight: MediaQuery.of(context).size.height * 0.8,
-                  ),
-                  child: SingleChildScrollView(
-                    child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: AppTheme.primaryColor,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.add_task,
-                            color: Colors.white,
-                          ),
+              ],
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryColor,
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        const SizedBox(width: 15),
-                        const Text(
-                          'Criar Novo Hábito',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20,
-                            color: Colors.white,
-                          ),
+                        child: const Icon(
+                          Icons.add_task,
+                          color: Colors.white,
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    TextField(
+                      ),
+                      const SizedBox(width: 15),
+                      const Text(
+                        'Criar Novo Hábito',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  TypeAheadField(
+                    textFieldConfiguration: TextFieldConfiguration(
                       controller: nameController,
                       style: const TextStyle(color: Colors.white),
                       decoration: AppTheme.textFieldDecoration(
@@ -762,188 +801,242 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         ),
                       ),
                     ),
-                    const SizedBox(height: 15),
-                    DropdownButtonFormField<String>(
-                      value: selectedFrequency,
-                      dropdownColor: AppTheme.cardColor,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: AppTheme.textFieldDecoration(
-                        'Frequência',
-                        prefixIcon: const Icon(
-                          Icons.calendar_today,
-                          color: AppTheme.textSecondaryColor,
+                    suggestionsCallback: _getHabitSuggestions,
+                    itemBuilder: (context, HabitSuggestion suggestion) {
+                      return ListTile(
+                        title: Text(suggestion.name, style: const TextStyle(color: Colors.black)),
+                        subtitle: Text(
+                          '${suggestion.category} - ${suggestion.frequency}',
+                          style: const TextStyle(color: Colors.grey),
                         ),
+                      );
+                    },
+                    onSuggestionSelected: (HabitSuggestion suggestion) async {
+                      nameController.text = suggestion.name;
+                      
+                      setDialogState(() {
+                        selectedFrequency = suggestion.frequency;
+                        
+                        if (!categories.contains(suggestion.category)) {
+                          categories.add(suggestion.category);
+                        }
+                        selectedCategory = suggestion.category;
+                      });
+                      await HabitSuggestionService().registerUserSelection(
+                        nameController.text,
+                        suggestion,
+                        suggestion.frequency
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 15),
+                  DropdownButtonFormField<String>(
+                    value: selectedFrequency,
+                    dropdownColor: AppTheme.cardColor,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: AppTheme.textFieldDecoration(
+                      'Frequência',
+                      prefixIcon: const Icon(
+                        Icons.calendar_today,
+                        color: AppTheme.textSecondaryColor,
                       ),
-                      onChanged: (value) {
-                        setState(() {
-                          selectedFrequency = value!;
+                    ),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setDialogState(() {
+                          selectedFrequency = value;
                         });
-                      },
-                      items: frequencies.map((freq) => 
-                        DropdownMenuItem(
-                          value: freq, 
-                          child: Text(freq),
-                        )
-                      ).toList(),
-                    ),
-                    const SizedBox(height: 15),
-                    TextField(
-                      controller: totalController,
-                      keyboardType: TextInputType.number,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: AppTheme.textFieldDecoration(
-                        'Número de vezes ${getFrequencyLabel()}',
-                        prefixIcon: const Icon(
-                          Icons.repeat,
-                          color: AppTheme.textSecondaryColor,
-                        ),
+                      }
+                    },
+                    items: frequencies.map((freq) => 
+                      DropdownMenuItem(
+                        value: freq, 
+                        child: Text(freq),
+                      )
+                    ).toList(),
+                  ),
+                  const SizedBox(height: 15),
+                  DropdownButtonFormField<String>(
+                    value: selectedCategory,
+                    dropdownColor: AppTheme.cardColor,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: AppTheme.textFieldDecoration(
+                      'Categoria',
+                      prefixIcon: const Icon(
+                        Icons.category,
+                        color: AppTheme.textSecondaryColor,
                       ),
                     ),
-                    const SizedBox(height: 15),
-                    const Text(
-                      'Janela de Tempo',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white70,
+                    onChanged: (value) {
+                      if (value != null) {
+                        setDialogState(() {
+                          selectedCategory = value;
+                        });
+                      }
+                    },
+                    items: categories.map((category) => 
+                      DropdownMenuItem(
+                        value: category, 
+                        child: Text(category),
+                      )
+                    ).toList(),
+                  ),
+                  const SizedBox(height: 15),
+                  TextField(
+                    controller: totalController,
+                    keyboardType: TextInputType.number,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: AppTheme.textFieldDecoration(
+                      'Número de vezes ${getFrequencyLabel()}',
+                      prefixIcon: const Icon(
+                        Icons.repeat,
+                        color: AppTheme.textSecondaryColor,
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () async {
-                              final pickedDate = await showDatePicker(
-                                context: context,
-                                initialDate: DateTime.now(),
-                                firstDate: DateTime(2000),
-                                lastDate: DateTime(2100),
-                              );
-                              if (pickedDate != null) {
-                                selectedStartTime = '${pickedDate.toLocal()}'.split(' ')[0];
-                                setState(() {});
-                              }
-                            },
-                            icon: const Icon(Icons.calendar_today),
-                            label: Text(
-                              selectedStartTime ?? 'Início (Dia)',
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.cardColor,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        const Icon(
-                          Icons.arrow_forward,
-                          color: Colors.white70,
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () async {
-                              final pickedDate = await showDatePicker(
-                                context: context,
-                                initialDate: DateTime.now(),
-                                firstDate: DateTime(2000),
-                                lastDate: DateTime(2100),
-                              );
-                              if (pickedDate != null) {
-                                selectedEndTime = '${pickedDate.toLocal()}'.split(' ')[0];
-                                setState(() {});
-                              }
-                            },
-                            icon: const Icon(Icons.calendar_today),
-                            label: Text(
-                              selectedEndTime ?? 'Fim (Dia)',
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.cardColor,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                          ),
-                        ),
-                      ],
+                  ),
+                  const SizedBox(height: 15),
+                  const Text(
+                    'Janela de Tempo',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white70,
                     ),
-                    const SizedBox(height: 25),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                          style: TextButton.styleFrom(
-                            foregroundColor: AppTheme.textSecondaryColor,
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                          ),
-                          child: const Text(
-                            'Cancelar',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        ElevatedButton(
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
                           onPressed: () async {
-                            if (nameController.text.isNotEmpty && totalController.text.isNotEmpty) {
-                              try {
-                                final total = int.tryParse(totalController.text) ?? 1;
-                                await habitProvider.addHabit(
-                                  nameController.text,
-                                  selectedFrequency,
-                                  total,
-                                  startTime: selectedStartTime,
-                                  endTime: selectedEndTime,
-                                );
-                                if (mounted) Navigator.pop(context);
-                              } catch (e) {
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Erro ao adicionar hábito: $e'),
-                                      backgroundColor: AppTheme.errorColor,
-                                    ),
-                                  );
-                                }
-                              }
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Preencha todos os campos obrigatórios'),
-                                  backgroundColor: AppTheme.warningColor,
-                                ),
-                              );
+                            final pickedDate = await showDatePicker(
+                              context: context,
+                              initialDate: DateTime.now(),
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime(2100),
+                            );
+                            if (pickedDate != null) {
+                              selectedStartTime = '${pickedDate.toLocal()}'.split(' ')[0];
+                              setDialogState(() {});
                             }
                           },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.primaryColor,
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            elevation: 5,
+                          icon: const Icon(Icons.calendar_today),
+                          label: Text(
+                            selectedStartTime ?? 'Início (Dia)',
+                            style: const TextStyle(color: Colors.white),
                           ),
-                          child: const Text(
-                            'Adicionar',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.cardColor,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
                         ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                      const SizedBox(width: 10),
+                      const Icon(
+                        Icons.arrow_forward,
+                        color: Colors.white70,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () async {
+                            final pickedDate = await showDatePicker(
+                              context: context,
+                              initialDate: DateTime.now(),
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime(2100),
+                            );
+                            if (pickedDate != null) {
+                              selectedEndTime = '${pickedDate.toLocal()}'.split(' ')[0];
+                              setDialogState(() {});
+                            }
+                          },
+                          icon: const Icon(Icons.calendar_today),
+                          label: Text(
+                            selectedEndTime ?? 'Fim (Dia)',
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.cardColor,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 25),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppTheme.textSecondaryColor,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        ),
+                        child: const Text(
+                          'Cancelar',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      ElevatedButton(
+                        onPressed: () async {
+                          if (nameController.text.isNotEmpty && totalController.text.isNotEmpty) {
+                            try {
+                              final total = int.tryParse(totalController.text) ?? 1;
+                              await habitProvider.addHabit(
+                                nameController.text,
+                                selectedFrequency,
+                                total,
+                                startTime: selectedStartTime,
+                                endTime: selectedEndTime,
+                                category: selectedCategory,
+                              );
+                              if (mounted) Navigator.pop(context);
+                            } catch (e) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Erro ao adicionar hábito: $e'),
+                                    backgroundColor: AppTheme.errorColor,
+                                  ),
+                                );
+                              }
+                            }
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Preencha todos os campos obrigatórios'),
+                                backgroundColor: AppTheme.warningColor,
+                              ),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryColor,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          elevation: 5,
+                        ),
+                        child: const Text(
+                          'Adicionar',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-                ),
-              ),
-            );
-          },
-        );
-      },
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -993,6 +1086,30 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     String? selectedEndTime = habit.endTime;
     final List<String> frequencies = ['Diária', 'Semanal', 'Mensal'];
     String selectedFrequency = habit.frequency;
+    
+    final List<String> categories = [
+      'Saúde',
+      'Fitness',
+      'Produtividade',
+      'Estudo',
+      'Trabalho',
+      'Lazer',
+      'Mindfulness',
+      'Nutrição',
+      'Social',
+      'Finanças',
+      'Habilidades',
+      'Leitura',
+      'Exercício',
+      'bem-estar',
+      'aprendizado',
+      'culinária',
+      'organização',
+    ];
+    if (!categories.contains(habit.category)) {
+      categories.add(habit.category);
+    }
+    String selectedCategory = habit.category;
 
     Future<void> _selectTime(BuildContext context, bool isStartTime) async {
       TimeOfDay? initialTime;
@@ -1132,14 +1249,42 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           ),
                         ),
                         onChanged: (value) {
-                          setState(() {
-                            selectedFrequency = value!;
-                          });
+                          if (value != null) {
+                            setState(() {
+                              selectedFrequency = value;
+                            });
+                          }
                         },
                         items: frequencies.map((freq) => 
                           DropdownMenuItem(
                             value: freq, 
                             child: Text(freq),
+                          )
+                        ).toList(),
+                      ),
+                      const SizedBox(height: 15),
+                      DropdownButtonFormField<String>(
+                        value: selectedCategory,
+                        dropdownColor: AppTheme.cardColor,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: AppTheme.textFieldDecoration(
+                          'Categoria',
+                          prefixIcon: const Icon(
+                            Icons.category,
+                            color: AppTheme.textSecondaryColor,
+                          ),
+                        ),
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() {
+                              selectedCategory = value;
+                            });
+                          }
+                        },
+                        items: categories.map((category) => 
+                          DropdownMenuItem(
+                            value: category, 
+                            child: Text(category),
                           )
                         ).toList(),
                       ),
@@ -1256,6 +1401,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                     total,
                                     selectedStartTime,
                                     selectedEndTime,
+                                    category: selectedCategory,
                                   );
                                   if (context.mounted) Navigator.pop(context);
                                 } catch (e) {

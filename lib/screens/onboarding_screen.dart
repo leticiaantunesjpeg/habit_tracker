@@ -108,7 +108,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Page indicators
                     Row(
                       children: List.generate(
                         _numPages,
@@ -126,7 +125,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                       ),
                     ),
-                    // Next button
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: theme.primary,

@@ -2,19 +2,17 @@ import 'package:flutter/material.dart';
 import 'font_constants.dart';
 
 class AppTheme {
-  // Cores principais
-  static const Color primaryColor = Color(0xFF3498DB);   // Azul mais vibrante
-  static const Color primaryDarkColor = Color(0xFF2980B9); // Azul escuro
-  static const Color accentColor = Color(0xFF9B59B6);     // Roxo como acento
-  static const Color backgroundColor = Color(0xFF1E2B3C); // Fundo escuro
-  static const Color cardColor = Color(0xFF2C3E50);       // Cinza azulado para cards
-  static const Color successColor = Color(0xFF2ECC71);    // Verde para ações positivas
-  static const Color errorColor = Color(0xFFE74C3C);      // Vermelho para erros
-  static const Color warningColor = Color(0xFFF39C12);    // Laranja para avisos
-  static const Color textPrimaryColor = Colors.white;     // Texto primário
-  static const Color textSecondaryColor = Color(0xFFBDC3C7); // Texto secundário
+  static const Color primaryColor = Color(0xFF3498DB);
+  static const Color primaryDarkColor = Color(0xFF2980B9);
+  static const Color accentColor = Color(0xFF9B59B6);
+  static const Color backgroundColor = Color(0xFF1E2B3C);
+  static const Color cardColor = Color(0xFF2C3E50);
+  static const Color successColor = Color(0xFF2ECC71);
+  static const Color errorColor = Color(0xFFE74C3C);
+  static const Color warningColor = Color(0xFFF39C12);
+  static const Color textPrimaryColor = Colors.white;
+  static const Color textSecondaryColor = Color(0xFFBDC3C7);
 
-  // Gradientes
   static const LinearGradient primaryGradient = LinearGradient(
     colors: [primaryColor, primaryDarkColor],
     begin: Alignment.topLeft,
@@ -53,7 +51,6 @@ class AppTheme {
           );
   }
 
-  // Estilo de texto com fontes profissionais
   static TextStyle get headingStyle => AppFonts.headingMedium(color: textPrimaryColor);
 
   static TextStyle get subheadingStyle => AppFonts.headingSmall(color: textPrimaryColor);
@@ -68,7 +65,6 @@ class AppTheme {
   
   static TextStyle get labelStyle => AppFonts.labelText(color: textSecondaryColor);
 
-  // Decoração para cards
   static BoxDecoration cardDecoration = BoxDecoration(
     borderRadius: BorderRadius.circular(15),
     boxShadow: [
@@ -81,7 +77,6 @@ class AppTheme {
     gradient: primaryGradient,
   );
 
-  // Decoração para inputs
   static InputDecoration textFieldDecoration(String label, {Widget? prefixIcon}) {
     return InputDecoration(
       labelText: label,
@@ -101,7 +96,6 @@ class AppTheme {
     );
   }
 
-  // Estilo para botões
   static ButtonStyle elevatedButtonStyle = ElevatedButton.styleFrom(
     backgroundColor: primaryColor,
     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -110,7 +104,6 @@ class AppTheme {
     shadowColor: primaryColor.withOpacity(0.5),
   );
 
-  // Creates a text theme using our professional fonts
   static TextTheme createTextTheme(ColorScheme colorScheme) {
     return TextTheme(
       displayLarge: AppFonts.primaryFont.copyWith(
